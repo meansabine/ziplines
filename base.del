@@ -1,0 +1,38 @@
+Any LookingAtPos(define accept, define exclude, define rangeLims): RayCastHitPosition(EyePosition(), Destination(EyePosition(), FacingDirectionOf(), rangeLims), accept, exclude, false);
+define RaycastingPos(define accept, define exclude, define rangeLims, define startPos): RayCastHitPosition(startPos, Destination(startPos, FacingDirectionOf(), rangeLims), accept, exclude, false);
+define LookingAtPlayer(define accept, define exclude, define rangeLims): RayCastHitPlayer(EyePosition(), Destination(EyePosition(), FacingDirectionOf(), rangeLims), accept, exclude, false);
+define LookingCustom(define accept, define exclude, define rangeLims, define player): RayCastHitPosition(player, Destination(EyePosition(player), FacingDirectionOf(player), rangeLims), accept, exclude, false);
+void StopMotion(define player, define xAxis, define zAxis, define yAxis)
+{
+    if (xAxis)
+    {
+        ApplyImpulse(player, Right(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+        ApplyImpulse(player, Left(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+    }
+    if (yAxis)
+    {
+        ApplyImpulse(player, Down(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+        ApplyImpulse(player, Up(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+    }
+    if (zAxis)
+    {
+        ApplyImpulse(player, Backward(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+        ApplyImpulse(player, Forward(), 0.001, Relative.ToWorld, ContraryMotion.Cancel);
+    }
+}
+void DestroyEnts(define entArray)
+{
+    entArray = FilteredArray(entArray, EntityExists(ArrayElement()));
+    foreach (define e in entArray)
+    {
+        DestroyEffect(e);
+    }
+}
+void DestroyTexts(define textArray)
+{
+    foreach (define t in textArray)
+    {
+        DestroyHudText(t);
+        DestroyInWorldText(t);
+    }
+}

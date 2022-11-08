@@ -1,0 +1,10 @@
+
+
+{
+    "Modes": {
+        "Skirmish": {
+            "Enabled": true,
+			"Enabled Maps": ["King's Row"]
+        }
+    }
+}

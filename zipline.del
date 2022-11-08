@@ -1,0 +1,204 @@
+import "settings.json";
+import "base.del";
+import "pseudoChase.del";
+globalvar define zipLines;
+//[x][0] - zipLineStart
+//[x][1] - zipLineEnd
+//[x][2] - attachPoints
+//[x][3] - zipLineEffectId
+//[x][4] - player
+playervar define tempZipLineIndex !;
+playervar define tempAttachPoints !;
+
+
+globalvar define attachPoints;
+//[]
+playervar define zipLineInfo !;
+//[x][0] - Zip Line Start Point
+//[x][1] - Zip Line End
+//[x][2] - isAttached
+//[x][3] - attachedTime 
+//[x][4] - arrayinfo
+//[x][5] - attachPoint
+
+playervar define myZiplines !;
+
+playervar define createMode ;
+playervar define createModeStats;
+//[0] - place
+//[1] - place 2
+//[2] - effect ID
+
+// define isNearZipline(Player ply): CountOf(FilteredArray(zipLines, DistanceBetween(PositionOf(ply), ArrayElement()[0]) <= 4 && ArrayElement()[0] != null || DistanceBetween(PositionOf(ply), ArrayElement()[1]) <= 4  && ArrayElement()[0] != null )) != 0 ? true : false;
+
+define isNearZipline(Player ply): CountOf(FilteredArray(attachPoints, DistanceBetween(PositionOf(ply), ArrayElement()) <= 4 && ArrayElement() != null || DistanceBetween(PositionOf(ply), ArrayElement()) <= 4  && ArrayElement() != null )) != 0 ? true : false;
+
+define getAttachPoint(Player ply): FilteredArray(attachPoints, DistanceBetween(PositionOf(ply), ArrayElement()) <= 4 && ArrayElement() != null || DistanceBetween(PositionOf(ply), ArrayElement()) <= 4  && ArrayElement() != null);
+define ziplineNear(Player ply, Any attachPoint): FilteredArray(zipLines, IndexOfArrayValue(ArrayElement()[2], attachPoint) != -1)[0];
+define zipLineFacing(Player ply, Any endsArray): FilteredArray(endsArray, (IsInViewAngle(ply, ArrayElement(), 90) && DistanceBetween(PositionOf(ply), ArrayElement()) >= 6) || DistanceBetween(PositionOf(ply), ArrayElement()) >= 6)[0];
+
+
+
+define retrievePlayerZiplines(Any player): FilteredArray(zipLines, ArrayElement()[4] == player);
+
+define removeFromAttachArray(Any current, Any removed): FilteredArray(current, IndexOfArrayValue(removed, ArrayElement()) == -1);
+define removeAllFromZipArray(Any current, Any player): FilteredArray(current, ArrayElement()[4] != player);
+
+rule: "Create Mode"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.Melee))
+    if (!createMode)
+    {
+        createMode = true;
+        SetPrimaryFireEnabled(EventPlayer(), false);
+        SetSecondaryFireEnabled(EventPlayer(), false);
+        Wait(1);
+    }
+
+rule: "PlaceOne"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+    if (createMode)
+    {
+        createModeStats[0] = RaycastingPos(null, EventPlayer(), 50, EyePosition(EventPlayer()));
+    }
+
+rule: "PlaceOne"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+    if (createMode)
+    {
+        createModeStats[1] = RaycastingPos(null, EventPlayer(), 50, EyePosition(EventPlayer()));
+    }
+
+
+
+
+rule: "Ultimate"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+    if (createMode)
+    {
+        CreateZipline(createModeStats[0], createModeStats[1]);
+    }
+
+
+
+rule: "Ultimate"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.Ability1))
+    if (createMode)
+    {
+        DestroyZiplines();
+    }
+
+
+void CreateZipline(Vector start, Vector end)
+{
+    zipLines[CountOf(zipLines)][0] = start;
+    tempZipLineIndex = CountOf(zipLines) - 1;
+    zipLines[tempZipLineIndex][1] = end;
+    CreateBeamEffect(AllPlayers(),
+    BeamType.GoodBeam,
+    EvaluateOnce(zipLines[tempZipLineIndex][0]),
+    EvaluateOnce(zipLines[tempZipLineIndex][1]),
+    Color.Rose,
+    EffectRev.VisibleToPositionRadiusAndColor);
+    zipLines[tempZipLineIndex][3] = LastCreatedEntity();
+    zipLines[tempZipLineIndex][4] = EventPlayer();
+    for (define i = 0; i < 20; i++)
+        {
+            attachPoints[CountOf(attachPoints)] = LinearVecProgression(start, end, 0.05 * i);
+            zipLines[tempZipLineIndex][2][i] = LinearVecProgression(start, end, 0.05 * i);
+        }
+}
+
+
+void DestroyZiplines()
+{
+    myZiplines = retrievePlayerZiplines(EventPlayer());
+    foreach (define eff in myZiplines)
+    {
+        DestroyEffect(eff);
+        attachPoints = removeFromAttachArray(attachPoints, eff[2]);
+        Wait(0.05);
+    }
+    zipLines = removeAllFromZipArray(zipLines, EventPlayer());
+}
+
+rule: "Create Zipline"
+    Event.OngoingGlobal
+    if (CountOf(AllPlayers()) != 0)
+    {
+        zipLines = [];
+        // CreateZipline(Vector(-116.52, 9.05, 5.47), Vector(-141.27, 9.45, 38.82));
+        // CreateZipline(Vector(-91.08, 4.99,-28.32), Vector(-57.35, 8.3, -14.34));
+        // CreateZipline(Vector(-28.90, 11.72, -17.11), Vector(-8.30, 10.21, -45.74));
+        // CreateZipline(Vector(6.77, 9.01, -37.86), Vector(-31.67, 12.35, -33.76));
+        // CreateZipline(Vector(-49.24, 2.01, -38.76), Vector(-69.32, 8.05, -33.28));
+    }
+
+
+void AttachToZipline()
+{
+    if (getAttachPoint(EventPlayer()) == null || EventPlayer().zipLineInfo[2]) Abort();
+    zipLineInfo[5] = getAttachPoint(EventPlayer());
+    Wait(0.05);
+    
+    zipLineInfo[4] = ziplineNear(EventPlayer(), zipLineInfo[5]);
+    zipLineInfo[0] = zipLineInfo[5];
+    if (zipLineFacing(EventPlayer(), zipLineInfo[4]) != null)
+    {
+        zipLineInfo[1] = zipLineFacing(EventPlayer(), zipLineInfo[4]);
+    }
+    else zipLineInfo[1] = zipLineInfo[4][0];
+    PlayEffect(EventPlayer(), PlayEffect.BuffImpactSound, Color.White, EyePosition(), 500);
+    StartForcingPlayerPosition(EventPlayer(),
+    LinearVecProgression(zipLineInfo[0] - Vector(0, 2, 0), zipLineInfo[1] - Vector(0, 2, 0), RatePercentBased(25, 50, EvaluateOnce(TotalTimeElapsed()))),
+    true);
+    zipLineInfo[3] = TotalTimeElapsed();
+    zipLineInfo[2] = true;
+}
+
+
+void DetachFromZipline()
+{
+    zipLineInfo[2] = false;
+    StopForcingPlayerPosition(EventPlayer());
+    ApplyImpulse(EventPlayer(), FacingDirectionOf(), 3, Relative.ToWorld, ContraryMotion.Incorporate);
+    PlayEffect(EventPlayer(), PlayEffect.BuffExplosionSound, Color.White, EyePosition(), 500);
+}
+
+
+
+rule: "Attach To Zipline"
+    Event.OngoingPlayer
+    if (IsButtonHeld(EventPlayer(), Button.Interact))
+    if (isNearZipline(EventPlayer()))
+    if (!zipLineInfo[2])
+    {
+        AttachToZipline();
+    }
+
+rule: "Detach From Zipline"
+    Event.OngoingPlayer
+    if (zipLineInfo[2])
+    if (RatePercentBased(25, 50, zipLineInfo[3]) >= 1 && zipLineInfo[3] != 0 || (RatePercentBased(25, 50, zipLineInfo[3]) > 0.2 && IsButtonHeld(EventPlayer(), Button.Jump)))
+    {
+        DetachFromZipline();
+    }
+
+rule: "stijntjin"
+    Event.OngoingPlayer
+    {
+        CreateHudText(AllPlayers(),
+        getAttachPoint(EventPlayer()),
+        RaycastingPos(null, EventPlayer(), 50, EyePosition(EventPlayer())),
+        CountOf(FilteredArray(attachPoints, DistanceBetween(PositionOf(EventPlayer()), ArrayElement()) <= 4 && ArrayElement() != null || DistanceBetween(PositionOf(EventPlayer()), ArrayElement()) <= 4  && ArrayElement() != null )),
+        Location.Left,
+        -1,
+        Color.White,
+        Color.White,
+        Color.White,
+        HudTextRev.VisibleToStringAndColor);
+    }

@@ -1,0 +1,29 @@
+Damage Orb -> Decay Orb
+
+Decay Orb
+50 DPS -> 5 DPS | 200 Max -> 40 Max
+Speed  20 | 5.5 -> 10 | 2.25
+Applies Decay
+
+Decay Status: Slows the player by 12.5% and increases damage received by 20%
+
+
+
+
+
+Healing Orb
+65 HPS -> 43.75 HPS | 300 Max -> 200 Max
+Speed  20 | 5.5 -> 10 | 2.25
+Emboldens Allies
+
+Embolden Status: Decreases damage taken by 25%
+
+
+
+
+
+Coalescense
+70 DPS -> 57.5 DPS
+140 HPS -> 105 HPS
+Applies Decay
+Emboldens Allies

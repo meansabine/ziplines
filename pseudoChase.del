@@ -1,0 +1,59 @@
+    define TimePercentBased(Number duration, Number time): (TotalTimeElapsed() - time) / 
+    (duration) >= 1 ? 1 : (TotalTimeElapsed() - time) / (duration); 
+
+    // Provides a percentage of 0 to 1 based on the progress towards the duration.
+    // Utilize EvaluateOnce for 'time' arg! Also, 'time' is usually TotalTimeElapsed()
+
+
+    //[USAGE]
+
+    // CreateEffect(EventPlayer(),
+    // Effect.LightShaft,
+    // Color.SkyBlue,
+    // PositionOf(EventPlayer()),
+    // TimePercentBased(3, EvaluateOnce(TotalTimeElapsed())) * 5,
+    // EffectRev.VisibleToPositionRadiusAndColor);
+
+    define TimePercentLooped(Number duration, Number time): ((TotalTimeElapsed() - time) / (duration)) - 
+    RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down);
+
+    // Provides a percentage of 0 to 1 based on the progress towards the duration. Exact same as percent based time, but executes loops indefinitely.
+    // Utilize EvaluateOnce for 'time' arg! Also, 'time' is usually TotalTimeElapsed()
+
+
+
+
+    define TimePercentPingLoop(Number duration, Number time): Modulo(RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down), 2) == 0 ? 
+    ((TotalTimeElapsed() - time) / (duration)) - RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down) : 
+    1 - (((TotalTimeElapsed() - time) / (duration)) - RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down));
+
+    // Provides a percentage of 0 to 1 that pings back and forth based on duration. Infinitely Loops
+    // Utilize EvaluateOnce for 'time' arg! Also, 'time' is usually TotalTimeElapsed()
+    
+
+    define TimePercentLoopLimited(Number duration, Number cycles, Number time): RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down) < cycles ? ((TotalTimeElapsed() - time) / (duration)) - RoundToInteger((TotalTimeElapsed() - time) / (duration), Rounding.Down) : 0;
+
+
+//rate
+   define RatePercentBased(define rate, define dest, define time): AbsoluteValue(((TotalTimeElapsed() - time) * rate) / dest) < 1 ? (((TotalTimeElapsed() - time) * rate)) / dest : SignOfNumber(dest);
+
+
+
+
+
+
+
+
+
+
+
+    //Misc Bonus Macros - used by other macros or just included!
+     Number SignOfNumber(Number num): AbsoluteValue(num) == num ? 1 : -1;
+    //returns the sign of a number as either -1 or 1
+
+
+    Vector LinearVecProgression(define v1, define v2, define progress): v1 + progress * (v2 - v1);
+    //returns a vector between two provided vectors based on progress(0 to 1)
+
+    define IndexArrayPercent(define array, define percent): array[(CountOf(array) - 1) * percent];
+    //returns the value in the given array based on percent
